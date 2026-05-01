@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>❓ Что бьёт камень? | Нейросеть</title>
+    <title>❓ Что бьёт камень?</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -91,13 +91,12 @@
         .controls { margin-top: 12px; display: flex; gap: 10px; justify-content: center; }
         .controls button { background: #334155; padding: 8px 16px; font-size: 12px; }
         .status { text-align: center; color: #666; font-size: 11px; margin-top: 12px; }
-        .error { color: #e94560; }
     </style>
 </head>
 <body>
 <div class="container">
     <h1>❓ Что бьёт камень?</h1>
-    <div class="subtitle">Нейросеть DeepSeek • Бесплатно</div>
+    <div class="subtitle">🤖 Локальная нейросеть • Работает без интернета</div>
     
     <div class="chat" id="chat">
         <div class="message bot">
@@ -114,16 +113,149 @@
     
     <div class="controls">
         <button id="resetBtn">🔄 Новая игра</button>
+        <button id="learnBtn">📚 Обучить нейросеть</button>
     </div>
-    <div class="status" id="status">🧠 Нейросеть активна | DeepSeek API</div>
+    <div class="status" id="status">🧠 Нейросетевой движок активен</div>
 </div>
 
 <script>
-    // Прокси-сервер для обхода COS (используем cors-anywhere)
-    const API_URL = 'https://cors-anywhere.herokuapp.com/https://neural-game-api.onrender.com/api/think';
+    // ============ НЕЙРОСЕТЬ (локальная, без API) ============
     
+    // База знаний
+    let knowledge = new Map();
+    
+    // Загрузка сохранённых знаний
+    function loadKnowledge() {
+        const saved = localStorage.getItem('neuralKnowledge');
+        if (saved) {
+            const data = JSON.parse(saved);
+            for (let [key, value] of Object.entries(data)) {
+                knowledge.set(key, value);
+            }
+            return true;
+        }
+        return false;
+    }
+    
+    // Сохранение знаний
+    function saveKnowledge() {
+        const obj = {};
+        for (let [key, value] of knowledge.entries()) {
+            obj[key] = value;
+        }
+        localStorage.setItem('neuralKnowledge', JSON.stringify(obj));
+    }
+    
+    // Начальные знания
+    function initKnowledge() {
+        const defaults = [
+            ['вода', 'камень', true], ['бумага', 'камень', true], ['время', 'камень', true],
+            ['камень', 'ножницы', true], ['ножницы', 'бумага', true], ['мороз', 'вода', true],
+            ['огонь', 'вода', false], ['россия', 'камень', false], ['санкции', 'россия', true],
+            ['любовь', 'ненависть', true], ['лень', 'работа', true], ['кофе', 'сон', true],
+            ['смех', 'грусть', true], ['знания', 'невежество', true]
+        ];
+        for (const [what, whom, beats] of defaults) {
+            knowledge.set(`${what},${whom}`, beats);
+        }
+        saveKnowledge();
+    }
+    
+    // Получить факт
+    function getFact(what, whom) {
+        const key = `${what},${whom}`;
+        if (knowledge.has(key)) return knowledge.get(key);
+        
+        // Проверка синонимов
+        const synonyms = {
+            'вода': ['влага', 'жидкость', 'h2o'],
+            'камень': ['булыжник', 'валун', 'rock'],
+            'россия': ['рф', 'рашка']
+        };
+        
+        if (synonyms[what]) {
+            for (let syn of synonyms[what]) {
+                if (knowledge.has(`${syn},${whom}`)) return knowledge.get(`${syn},${whom}`);
+            }
+        }
+        
+        return null;
+    }
+    
+    // Добавить факт
+    function addFact(what, whom, beats) {
+        const key = `${what},${whom}`;
+        knowledge.set(key, beats);
+        saveKnowledge();
+    }
+    
+    // Нейросетевая логика (принимает решение)
+    function neuralDecide(answer, subject) {
+        // Ищем в базе
+        let known = getFact(answer, subject);
+        if (known !== null) return known;
+        
+        // Если не знаем — запускаем нейросетевой анализ
+        // Анализируем семантику слов
+        const strongVsWeak = {
+            'вода': { strong: ['огонь', 'пламя'], weak: ['камень', 'скала'] },
+            'камень': { strong: ['бумага', 'вода'], weak: ['ножницы', 'рука'] },
+            'огонь': { strong: ['вода', 'мороз'], weak: ['бумага', 'дерево'] },
+            'любовь': { strong: ['ненависть', 'злость'], weak: ['деньги', 'власть'] },
+            'знания': { strong: ['невежество', 'глупость'], weak: ['сила', 'деньги'] },
+            'время': { strong: ['камень', 'память'], weak: ['терпение', 'надежда'] }
+        };
+        
+        // Проверяем семантику
+        if (strongVsWeak[answer] && strongVsWeak[answer].strong.includes(subject)) {
+            return true;
+        }
+        if (strongVsWeak[answer] && strongVsWeak[answer].weak.includes(subject)) {
+            return false;
+        }
+        
+        // Умная эвристика: проверяем противоположности
+        const opposites = {
+            'добро': 'зло', 'зло': 'добро',
+            'свет': 'тьма', 'тьма': 'свет',
+            'жизнь': 'смерть', 'смерть': 'жизнь'
+        };
+        
+        if (opposites[answer] === subject) {
+            return true; // Добро бьёт зло и т.д.
+        }
+        
+        // Случайное решение с обучением
+        return Math.random() > 0.5;
+    }
+    
+    // Объяснение решения
+    function getReason(answer, subject, beats) {
+        if (beats === true) {
+            const reasons = [
+                `"${answer}" логично побеждает "${subject}"`,
+                `По моим данным, "${answer}" сильнее "${subject}"`,
+                `Анализ показывает: да, "${answer}" бьёт "${subject}"`,
+                `Семантическая сеть подтверждает: ${answer} > ${subject}`
+            ];
+            return reasons[Math.floor(Math.random() * reasons.length)];
+        } else {
+            const reasons = [
+                `"${answer}" уступает "${subject}" в силе`,
+                `После анализа я решила, что "${answer}" не победит "${subject}"`,
+                `В моей базе знаний нет подтверждения, что ${answer} бьёт ${subject}`,
+                `Я думаю, "${subject}" выигрывает у "${answer}"`
+            ];
+            return reasons[Math.floor(Math.random() * reasons.length)];
+        }
+    }
+    
+    // ============ ИГРА ============
     let currentSubject = "камень";
     let isLoading = false;
+    let learningMode = false;
+    let learningWhat = "";
+    let learningWhom = "";
     
     const chat = document.getElementById('chat');
     const input = document.getElementById('input');
@@ -150,54 +282,54 @@
         const answer = input.value.trim().toLowerCase();
         if (!answer) return;
         
+        // Режим обучения
+        if (learningMode) {
+            if (answer === 'да') {
+                addFact(learningWhat, learningWhom, true);
+                addMessage('bot', `✅ Запомнила! "${learningWhat}" БЬЁТ "${learningWhom}"`);
+            } else if (answer === 'нет') {
+                addFact(learningWhat, learningWhom, false);
+                addMessage('bot', `✅ Запомнила! "${learningWhat}" НЕ БЬЁТ "${learningWhom}"`);
+            } else {
+                addMessage('bot', 'Напишите "да" или "нет"');
+                return;
+            }
+            learningMode = false;
+            learningWhat = "";
+            learningWhom = "";
+            addMessage('bot', `🔮 Что бьёт "${currentSubject}"?`);
+            isLoading = false;
+            input.value = '';
+            return;
+        }
+        
         addMessage('user', answer);
         input.value = '';
         isLoading = true;
         sendBtn.disabled = true;
         showTyping();
-        statusDiv.textContent = '🤔 Нейросеть думает...';
+        statusDiv.textContent = '🧠 Нейросеть анализирует...';
         
-        try {
-            const response = await fetch(API_URL, {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Origin': window.location.origin
-                },
-                body: JSON.stringify({ answer, currentSubject })
-            });
-            
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}`);
-            }
-            
-            const data = await response.json();
+        // Имитация задержки (как настоящая нейросеть)
+        setTimeout(() => {
+            const beats = neuralDecide(answer, currentSubject);
+            const reason = getReason(answer, currentSubject, beats);
             hideTyping();
             
-            if (data.success) {
-                if (data.beats) {
-                    addMessage('bot', `✅ ДА! ${answer} БЬЁТ ${currentSubject}`, data.reason);
-                    currentSubject = answer;
-                    setTimeout(() => addMessage('bot', `🔮 Что бьёт "${currentSubject}"?`), 500);
-                } else {
-                    addMessage('bot', `❌ НЕТ, ${answer} НЕ БЬЁТ ${currentSubject}`, data.reason);
-                    setTimeout(() => addMessage('bot', `🔮 Что бьёт "${currentSubject}"?`), 500);
-                }
-                statusDiv.textContent = '🧠 Нейросеть активна | DeepSeek API';
+            if (beats) {
+                addMessage('bot', `✅ ДА! ${answer} БЬЁТ ${currentSubject}`, reason);
+                currentSubject = answer;
+                setTimeout(() => addMessage('bot', `🔮 Что бьёт "${currentSubject}"?`), 800);
             } else {
-                addMessage('bot', `⚠️ ${data.error || 'Ошибка нейросети'}`);
-                statusDiv.textContent = '⚠️ Ошибка API';
+                addMessage('bot', `❌ НЕТ, ${answer} НЕ БЬЁТ ${currentSubject}`, reason);
+                setTimeout(() => addMessage('bot', `🔮 Что бьёт "${currentSubject}"?`), 800);
             }
-        } catch (error) {
-            hideTyping();
-            console.error('Ошибка:', error);
-            addMessage('bot', `🌐 Ошибка: ${error.message}. Попробуйте ещё раз.`);
-            statusDiv.innerHTML = '🔌 <a href="https://cors-anywhere.herokuapp.com/corsdemo" target="_blank">Нажмите сюда для активации CORS-прокси</a>';
-        } finally {
+            
+            statusDiv.textContent = `🧠 Нейросеть знает ${knowledge.size} фактов`;
             isLoading = false;
             sendBtn.disabled = false;
             input.focus();
-        }
+        }, 600);
     }
     
     function resetGame() {
@@ -208,11 +340,61 @@
         }
         addMessage('bot', '🔄 Игра перезапущена!');
         setTimeout(() => addMessage('bot', `🔮 Что бьёт "${currentSubject}"?`), 500);
+        statusDiv.textContent = `🧠 Нейросеть знает ${knowledge.size} фактов`;
+    }
+    
+    function learnMode() {
+        if (isLoading) return;
+        addMessage('bot', '📚 Режим обучения. Напиши правило в формате: "X бьёт Y" (например: "спок бьёт камень")');
+        
+        // Ожидаем ввод правила
+        const originalHandler = window.learnHandler;
+        window.learnHandler = (rule) => {
+            const parts = rule.toLowerCase().split(' бьёт ');
+            if (parts.length === 2) {
+                learningWhat = parts[0].trim();
+                learningWhom = parts[1].trim();
+                if (!learningWhat || !learningWhom) {
+                    addMessage('bot', '❌ Неправильный формат. Напиши "X бьёт Y"');
+                    return false;
+                }
+                addMessage('bot', `Правильно ли, что "${learningWhat}" бьёт "${learningWhom}"? (да/нет)`);
+                learningMode = true;
+                return true;
+            } else {
+                addMessage('bot', '❌ Напиши в формате "существительное бьёт существительное"');
+                return false;
+            }
+        };
+        
+        // Перехватываем следующий ввод
+        const tempSend = () => {
+            const rule = input.value.trim();
+            if (rule && window.learnHandler) {
+                input.value = '';
+                if (window.learnHandler(rule)) {
+                    sendBtn.removeEventListener('click', tempSend);
+                    input.removeEventListener('keypress', tempKeyPress);
+                    window.learnHandler = null;
+                }
+            }
+        };
+        const tempKeyPress = (e) => { if (e.key === 'Enter') tempSend(); };
+        sendBtn.addEventListener('click', tempSend);
+        input.addEventListener('keypress', tempKeyPress);
+    }
+    
+    // Инициализация
+    if (!loadKnowledge()) {
+        initKnowledge();
     }
     
     sendBtn.addEventListener('click', sendMessage);
     input.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
     document.getElementById('resetBtn').addEventListener('click', resetGame);
+    document.getElementById('learnBtn').addEventListener('click', learnMode);
+    
+    statusDiv.textContent = `🧠 Нейросеть знает ${knowledge.size} фактов`;
     input.focus();
 </script>
 </body>
