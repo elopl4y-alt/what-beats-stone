@@ -3,443 +3,134 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Что бьёт камень? - Нейросеть</title>
+    <title>Что бьёт камень? | Нейросеть</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #1a1a2e;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
             padding: 20px;
         }
-
-        .game-container {
+        .container {
             max-width: 700px;
             width: 100%;
-            background: #16213e;
-            border-radius: 16px;
-            padding: 24px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-        }
-
-        h1 {
-            text-align: center;
-            color: #e94560;
-            font-size: 1.8em;
-            margin-bottom: 8px;
-        }
-
-        .subtitle {
-            text-align: center;
-            color: #888;
-            margin-bottom: 24px;
-            font-size: 0.9em;
-        }
-
-        .chat-area {
             background: #0f3460;
+            border-radius: 20px;
+            padding: 24px;
+        }
+        h1 { text-align: center; color: #e94560; margin-bottom: 20px; }
+        .chat {
+            background: #1a1a2e;
             border-radius: 12px;
-            padding: 16px;
             height: 400px;
             overflow-y: auto;
+            padding: 16px;
             margin-bottom: 16px;
         }
-
-        .message {
-            margin-bottom: 12px;
-            display: flex;
-        }
-
-        .bot-message {
-            justify-content: flex-start;
-        }
-
-        .user-message {
-            justify-content: flex-end;
-        }
-
+        .message { margin-bottom: 12px; display: flex; }
+        .bot { justify-content: flex-start; }
+        .user { justify-content: flex-end; }
         .bubble {
             max-width: 75%;
             padding: 10px 16px;
             border-radius: 18px;
-            font-size: 0.95em;
-            line-height: 1.4;
-        }
-
-        .bot-message .bubble {
-            background: #1a1a2e;
-            color: #fff;
-            border-bottom-left-radius: 4px;
-        }
-
-        .user-message .bubble {
             background: #e94560;
             color: white;
-            border-bottom-right-radius: 4px;
         }
-
-        .input-area {
-            display: flex;
-            gap: 10px;
-        }
-
+        .bot .bubble { background: #1a1a2e; border: 1px solid #e94560; }
+        .input-area { display: flex; gap: 10px; }
         input {
             flex: 1;
-            padding: 12px 16px;
+            padding: 12px;
             border: none;
-            border-radius: 24px;
-            font-size: 1em;
-            background: #0f3460;
+            border-radius: 25px;
+            background: #1a1a2e;
             color: white;
-            outline: none;
         }
-
-        input::placeholder {
-            color: #888;
-        }
-
         button {
             padding: 12px 24px;
+            background: #e94560;
             border: none;
-            border-radius: 24px;
-            background: #e94560;
+            border-radius: 25px;
             color: white;
-            font-weight: bold;
             cursor: pointer;
-            font-size: 1em;
         }
-
-        button:hover {
-            background: #d63a55;
-        }
-
-        .commands {
-            margin-top: 12px;
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-
-        .cmd-btn {
-            background: #0f3460;
-            padding: 6px 12px;
-            font-size: 0.8em;
-        }
-
-        .cmd-btn:hover {
-            background: #1a4a7a;
-        }
-
-        .status {
-            text-align: center;
-            color: #666;
-            font-size: 0.75em;
-            margin-top: 12px;
-        }
-
-        ::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: #0f3460;
-            border-radius: 10px;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: #e94560;
-            border-radius: 10px;
-        }
+        .reason { font-size: 12px; opacity: 0.7; margin-top: 5px; }
     </style>
 </head>
 <body>
-    <div class="game-container">
-        <h1>❓ Что бьёт камень?</h1>
-        <div class="subtitle">Нейросеть | Обучаемая база знаний</div>
-
-        <div class="chat-area" id="chatArea">
-            <div class="message bot-message">
-                <div class="bubble">Нейросеть запущена. База знаний загружена.<br><br>Что бьёт "камень"?</div>
-            </div>
-        </div>
-
-        <div class="input-area">
-            <input type="text" id="userInput" placeholder="Введите ответ..." autocomplete="off">
-            <button id="sendBtn">→</button>
-        </div>
-
-        <div class="commands">
-            <button class="cmd-btn" data-cmd="rules">📋 Правила</button>
-            <button class="cmd-btn" data-cmd="reset">🗑️ Сбросить базу</button>
-            <button class="cmd-btn" data-cmd="stats">📊 Статистика</button>
-        </div>
-        <div class="status" id="status">🧠 Нейросеть активна</div>
+<div class="container">
+    <h1>❓ Что бьёт камень?</h1>
+    <div class="chat" id="chat">
+        <div class="message bot"><div class="bubble">🔮 Что бьёт "камень"?</div></div>
     </div>
+    <div class="input-area">
+        <input type="text" id="input" placeholder="Ваш ответ...">
+        <button onclick="send()">→</button>
+    </div>
+</div>
 
-    <script>
-        // ============ БАЗА ЗНАНИЙ ============
-        let knowledge = new Map();
+<script>
+    let currentSubject = "камень";
+    let isLoading = false;
+    const chat = document.getElementById('chat');
+    const input = document.getElementById('input');
+
+    function addMessage(type, text, reason = null) {
+        const div = document.createElement('div');
+        div.className = `message ${type}`;
+        let html = `<div class="bubble">${text}`;
+        if (reason) html += `<div class="reason">🧠 ${reason}</div>`;
+        html += `</div>`;
+        div.innerHTML = html;
+        chat.appendChild(div);
+        chat.scrollTop = chat.scrollHeight;
+    }
+
+    async function send() {
+        if (isLoading) return;
+        const answer = input.value.trim().toLowerCase();
+        if (!answer) return;
         
-        // Загрузка из localStorage
-        function loadKnowledge() {
-            const saved = localStorage.getItem('neuralDB');
-            if (saved) {
-                const data = JSON.parse(saved);
-                for (let [key, value] of Object.entries(data)) {
-                    knowledge.set(key, value);
-                }
-                return true;
-            }
-            return false;
-        }
+        addMessage('user', answer);
+        input.value = '';
+        isLoading = true;
         
-        // Сохранение в localStorage
-        function saveKnowledge() {
-            const obj = {};
-            for (let [key, value] of knowledge.entries()) {
-                obj[key] = value;
-            }
-            localStorage.setItem('neuralDB', JSON.stringify(obj));
-        }
-        
-        // Инициализация базы по умолчанию
-        function initDefaultKnowledge() {
-            const defaults = [
-                ['вода', 'камень', true],
-                ['бумага', 'камень', true],
-                ['время', 'камень', true],
-                ['камень', 'ножницы', true],
-                ['ножницы', 'бумага', true],
-                ['бумага', 'спок', true],
-                ['спок', 'камень', true],
-                ['камень', 'ящерица', true],
-                ['ящерица', 'спок', true],
-                ['ножницы', 'ящерица', true],
-                ['огонь', 'вода', false],
-                ['мороз', 'вода', true],
-                ['россия', 'камень', false],
-                ['санкции', 'россия', true],
-                ['лень', 'работа', true],
-                ['кофе', 'сон', true]
-            ];
+        // Имитация работы нейросети (без API — локальная логика)
+        setTimeout(() => {
+            const knownFacts = {
+                'вода,камень': true, 'бумага,камень': true, 'время,камень': true,
+                'камень,ножницы': true, 'ножницы,бумага': true, 'мороз,вода': true,
+                'огонь,вода': false, 'россия,камень': false, 'санкции,россия': true
+            };
+            const key = `${answer},${currentSubject}`;
+            let beats = knownFacts[key];
+            let reason = '';
             
-            for (const [what, whom, beats] of defaults) {
-                knowledge.set(`${what},${whom}`, beats);
-            }
-            saveKnowledge();
-        }
-        
-        // Получить факт
-        function getFact(what, whom) {
-            const key = `${what},${whom}`;
-            if (knowledge.has(key)) return knowledge.get(key);
-            return null;
-        }
-        
-        // Добавить факт
-        function setFact(what, whom, beats) {
-            const key = `${what},${whom}`;
-            knowledge.set(key, beats);
-            saveKnowledge();
-        }
-        
-        // Количество фактов
-        function factCount() {
-            return knowledge.size;
-        }
-        
-        // ============ ЛОГИКА НЕЙРОСЕТИ ============
-        let currentSubject = "камень";
-        let learningMode = false;
-        let learningWhat = "";
-        let learningWhom = "";
-        
-        function addMessage(type, text) {
-            const chatArea = document.getElementById('chatArea');
-            const msgDiv = document.createElement('div');
-            msgDiv.className = `message ${type === 'bot' ? 'bot-message' : 'user-message'}`;
-            const bubble = document.createElement('div');
-            bubble.className = 'bubble';
-            bubble.textContent = text;
-            msgDiv.appendChild(bubble);
-            chatArea.appendChild(msgDiv);
-            chatArea.scrollTop = chatArea.scrollHeight;
-        }
-        
-        function showRules() {
-            addMessage('bot', 'ПРАВИЛА:\n1. Я спрашиваю "Что бьёт X?"\n2. Ты называешь Y\n3. Если по базе знаний Y действительно бьёт X - я меняю вопрос на "Что бьёт Y?"\n4. Если нет - вопрос остаётся тем же\n5. Команды: "обучить X Y да/нет" - добавить правило\n6. Факты сохраняются в браузере');
-        }
-        
-        function processInput(input) {
-            input = input.trim().toLowerCase();
-            
-            if (input === '') return;
-            
-            // Команды
-            if (input === 'правила' || input === 'rules') {
-                showRules();
-                return;
-            }
-            
-            if (input === 'статистика' || input === 'stats') {
-                addMessage('bot', `База знаний содержит ${factCount()} фактов. Текущий объект: "${currentSubject}"`);
-                return;
-            }
-            
-            if (input === 'сброс' || input === 'reset') {
-                if (confirm('Сбросить всю обученную базу?')) {
-                    knowledge.clear();
-                    initDefaultKnowledge();
-                    currentSubject = "камень";
-                    addMessage('bot', `База знаний сброшена к начальной. Что бьёт "${currentSubject}"?`);
-                }
-                return;
-            }
-            
-            // Обработка обучения
-            if (input.startsWith('обучить ')) {
-                const parts = input.split(' ');
-                if (parts.length >= 4) {
-                    const what = parts[1];
-                    const whom = parts[2];
-                    const verdict = parts[3];
-                    if (verdict === 'да') {
-                        setFact(what, whom, true);
-                        addMessage('bot', `✓ Добавлено: ${what} бьёт ${whom}`);
-                    } else if (verdict === 'нет') {
-                        setFact(what, whom, false);
-                        addMessage('bot', `✓ Добавлено: ${what} НЕ бьёт ${whom}`);
-                    } else {
-                        addMessage('bot', `Формат: "обучить X Y да/нет"`);
-                    }
-                } else {
-                    addMessage('bot', `Формат: "обучить X Y да/нет"`);
-                }
-                return;
-            }
-            
-            // Основная логика проверки
-            const known = getFact(input, currentSubject);
-            
-            if (known === null) {
-                // Неизвестный факт - задаём вопрос пользователю
-                addMessage('bot', `Я не знаю, бьёт ли "${input}" "${currentSubject}". Обучить меня? (да/нет)`);
-                
-                // Ждём ответ
-                const originalHandler = window.oneTimeHandler;
-                window.oneTimeHandler = (answer) => {
-                    if (answer === 'да') {
-                        addMessage('bot', `Ты утверждаешь, что "${input}" бьёт "${currentSubject}"? (да/нет)`);
-                        window.oneTimeHandler = (answer2) => {
-                            if (answer2 === 'да') {
-                                setFact(input, currentSubject, true);
-                                addMessage('bot', `✓ Запомнила: ${input} бьёт ${currentSubject}. Продолжаем.`);
-                                // Применяем правило сразу
-                                addMessage('bot', `✔ ДА, ${input} бьёт ${currentSubject}`);
-                                currentSubject = input;
-                                addMessage('bot', `Что бьёт "${currentSubject}"?`);
-                            } else if (answer2 === 'нет') {
-                                setFact(input, currentSubject, false);
-                                addMessage('bot', `✓ Запомнила: ${input} НЕ бьёт ${currentSubject}. Попробуй ещё.`);
-                                addMessage('bot', `✘ НЕТ, ${input} НЕ бьёт ${currentSubject}`);
-                                addMessage('bot', `Что бьёт "${currentSubject}"?`);
-                            } else {
-                                addMessage('bot', `Напиши "да" или "нет"`);
-                                return;
-                            }
-                            window.oneTimeHandler = null;
-                        };
-                    } else if (answer === 'нет') {
-                        addMessage('bot', `Хорошо, не обучаем. Что бьёт "${currentSubject}"?`);
-                        window.oneTimeHandler = null;
-                    } else {
-                        addMessage('bot', `Напиши "да" или "нет"`);
-                    }
-                };
-                return;
-            }
-            
-            // Факт известен
-            if (known === true) {
-                addMessage('bot', `✔ ДА, ${input} бьёт ${currentSubject}`);
-                currentSubject = input;
-                addMessage('bot', `Что бьёт "${currentSubject}"?`);
+            if (beats === undefined) {
+                beats = Math.random() > 0.5;
+                reason = beats ? 'Похоже на правду' : 'Сомнительное утверждение';
             } else {
-                addMessage('bot', `✘ НЕТ, ${input} НЕ бьёт ${currentSubject}`);
-                addMessage('bot', `Что бьёт "${currentSubject}"?`);
+                reason = beats ? 'Подтверждено базой знаний' : 'Противоречит логике';
             }
-        }
-        
-        // Обработчик для одноразовых ответов (обучение)
-        function handleOneTime(input) {
-            if (window.oneTimeHandler) {
-                const handler = window.oneTimeHandler;
-                window.oneTimeHandler = null;
-                handler(input);
-                return true;
-            }
-            return false;
-        }
-        
-        // ============ ИНИЦИАЛИЗАЦИЯ ============
-        function init() {
-            const loaded = loadKnowledge();
-            if (!loaded || knowledge.size === 0) {
-                initDefaultKnowledge();
-                addMessage('bot', `Инициализирована база из 16 правил.`);
+            
+            if (beats) {
+                addMessage('bot', `✅ ДА! ${answer} БЬЁТ ${currentSubject}`, reason);
+                currentSubject = answer;
+                setTimeout(() => addMessage('bot', `🔮 Что бьёт "${currentSubject}"?`), 500);
             } else {
-                addMessage('bot', `Загружено ${factCount()} правил.`);
+                addMessage('bot', `❌ НЕТ, ${answer} НЕ БЬЁТ ${currentSubject}`, reason);
+                setTimeout(() => addMessage('bot', `🔮 Что бьёт "${currentSubject}"?`), 500);
             }
-            
-            addMessage('bot', `Что бьёт "${currentSubject}"?`);
-            
-            const inputEl = document.getElementById('userInput');
-            const sendBtn = document.getElementById('sendBtn');
-            
-            sendBtn.addEventListener('click', () => {
-                const text = inputEl.value;
-                if (text) {
-                    addMessage('user', text);
-                    if (!handleOneTime(text)) {
-                        processInput(text);
-                    }
-                    inputEl.value = '';
-                }
-            });
-            
-            inputEl.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    sendBtn.click();
-                }
-            });
-            
-            document.querySelectorAll('.cmd-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const cmd = btn.dataset.cmd;
-                    if (cmd === 'rules') {
-                        addMessage('user', 'правила');
-                        showRules();
-                    } else if (cmd === 'reset') {
-                        addMessage('user', 'сброс');
-                        processInput('сброс');
-                    } else if (cmd === 'stats') {
-                        addMessage('user', 'статистика');
-                        addMessage('bot', `База знаний содержит ${factCount()} фактов. Текущий объект: "${currentSubject}"`);
-                    }
-                    inputEl.value = '';
-                });
-            });
-        }
-        
-        init();
-    </script>
+            isLoading = false;
+        }, 500);
+    }
+    
+    input.addEventListener('keypress', (e) => { if (e.key === 'Enter') send(); });
+</script>
 </body>
 </html>
