@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>❓ Что бьёт камень?</title>
+    <title>🧠 Что бьёт камень? | Нейросеть DeepSeek</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
             min-height: 100vh;
             display: flex;
             justify-content: center;
@@ -16,70 +16,108 @@
             padding: 20px;
         }
         .container {
-            max-width: 800px;
+            max-width: 900px;
             width: 100%;
-            background: #0f3460;
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 28px;
+            box-shadow: 0 25px 45px rgba(0,0,0,0.3);
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #0f766e 0%, #0d9488 100%);
+            padding: 28px;
+            text-align: center;
+        }
+        .header h1 { font-size: 2rem; color: white; margin-bottom: 8px; }
+        .header p { color: rgba(255,255,255,0.9); font-size: 0.9rem; }
+        .badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 4px 12px;
             border-radius: 20px;
-            padding: 24px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            font-size: 0.75rem;
+            margin-top: 10px;
+            color: white;
         }
-        h1 { text-align: center; color: #e94560; margin-bottom: 20px; }
-        .subtitle { text-align: center; color: #888; margin-bottom: 20px; font-size: 14px; }
-        .chat {
-            background: #1a1a2e;
-            border-radius: 12px;
-            height: 400px;
+        .chat-area {
+            height: 450px;
             overflow-y: auto;
-            padding: 16px;
-            margin-bottom: 16px;
+            padding: 20px;
+            background: rgba(0,0,0,0.2);
         }
-        .message { margin-bottom: 12px; display: flex; }
-        .bot { justify-content: flex-start; }
-        .user { justify-content: flex-end; }
+        .message { margin-bottom: 16px; display: flex; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .bot-message { justify-content: flex-start; }
+        .user-message { justify-content: flex-end; }
         .bubble {
             max-width: 75%;
-            padding: 10px 16px;
-            border-radius: 18px;
-            background: #e94560;
-            color: white;
-            word-wrap: break-word;
+            padding: 12px 18px;
+            border-radius: 20px;
+            font-size: 0.95rem;
+            line-height: 1.4;
         }
-        .bot .bubble { background: #1a1a2e; border: 1px solid #e94560; }
-        .reason { font-size: 11px; opacity: 0.7; margin-top: 5px; }
-        .input-area { display: flex; gap: 10px; }
+        .bot-message .bubble {
+            background: #334155;
+            color: #e2e8f0;
+            border-bottom-left-radius: 4px;
+        }
+        .user-message .bubble {
+            background: #0d9488;
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+        .reason {
+            font-size: 0.75rem;
+            margin-top: 6px;
+            padding-top: 6px;
+            border-top: 1px solid rgba(255,255,255,0.2);
+            color: #94a3b8;
+        }
+        .input-area {
+            padding: 20px;
+            background: rgba(0,0,0,0.3);
+            display: flex;
+            gap: 10px;
+        }
         input {
             flex: 1;
-            padding: 12px;
+            padding: 12px 18px;
             border: none;
             border-radius: 25px;
-            background: #1a1a2e;
+            background: #334155;
             color: white;
+            font-size: 1rem;
             outline: none;
         }
+        input::placeholder { color: #94a3b8; }
         button {
-            padding: 12px 24px;
-            background: #e94560;
+            padding: 12px 28px;
             border: none;
             border-radius: 25px;
+            background: #0d9488;
             color: white;
+            font-weight: 600;
             cursor: pointer;
-            font-weight: bold;
+            transition: all 0.2s;
         }
-        button:hover { background: #d63a55; }
-        button:disabled { opacity: 0.5; cursor: not-allowed; }
+        button:hover { background: #0f766e; transform: scale(1.02); }
+        button:disabled { opacity: 0.6; cursor: not-allowed; }
         .typing {
             display: none;
-            padding: 10px 16px;
-            background: #1a1a2e;
-            border-radius: 18px;
+            padding: 10px 18px;
+            background: #334155;
+            border-radius: 20px;
             width: fit-content;
-            margin-bottom: 12px;
+            margin-bottom: 16px;
+            margin-left: 20px;
         }
         .typing span {
             display: inline-block;
             width: 8px;
             height: 8px;
-            background: #888;
+            background: #94a3b8;
             border-radius: 50%;
             margin: 0 2px;
             animation: blink 1.4s infinite;
@@ -88,314 +126,266 @@
             0%, 60%, 100% { opacity: 0.3; }
             30% { opacity: 1; }
         }
-        .controls { margin-top: 12px; display: flex; gap: 10px; justify-content: center; }
-        .controls button { background: #334155; padding: 8px 16px; font-size: 12px; }
-        .status { text-align: center; color: #666; font-size: 11px; margin-top: 12px; }
+        .controls {
+            padding: 12px 20px;
+            background: rgba(0,0,0,0.2);
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        .controls button {
+            background: #475569;
+            padding: 8px 16px;
+            font-size: 0.85rem;
+        }
+        .controls button:hover { background: #334155; }
+        .settings {
+            padding: 12px 20px;
+            background: rgba(0,0,0,0.15);
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+        }
+        .settings input {
+            width: 300px;
+            padding: 6px 12px;
+            font-size: 0.8rem;
+        }
+        .status { text-align: center; color: #666; font-size: 0.7rem; margin-top: 8px; margin-bottom: 8px; }
     </style>
 </head>
 <body>
 <div class="container">
-    <h1>❓ Что бьёт камень?</h1>
-    <div class="subtitle">🤖 Локальная нейросеть • Работает без интернета</div>
-    
-    <div class="chat" id="chat">
-        <div class="message bot">
-            <div class="bubble">🔮 Что бьёт "камень"?</div>
+    <div class="header">
+        <h1>🧠 Что бьёт камень?</h1>
+        <p>Настоящая нейросеть DeepSeek • Понимает смысл слов</p>
+        <div class="badge">🤖 DeepSeek V3 • 5M токенов бесплатно</div>
+    </div>
+
+    <div class="chat-area" id="chatArea">
+        <div class="message bot-message">
+            <div class="bubble">
+                🤖 Привет! Я нейросеть DeepSeek.<br><br>
+                🔮 <strong>Что бьёт "камень"?</strong>
+            </div>
         </div>
     </div>
-    
+
     <div class="typing" id="typing"><span>●</span><span>●</span><span>●</span></div>
-    
+
     <div class="input-area">
-        <input type="text" id="input" placeholder="Ваш ответ..." autocomplete="off">
-        <button id="sendBtn">→</button>
+        <input type="text" id="userInput" placeholder="Ваш ответ..." autocomplete="off">
+        <button id="sendBtn">Отправить →</button>
     </div>
-    
+
+    <div class="settings">
+        <span style="color:#888;">🔑 API Key DeepSeek:</span>
+        <input type="password" id="apiKeyInput" placeholder="sk-... вставьте ключ">
+        <button id="saveKeyBtn">💾 Сохранить</button>
+    </div>
+    <div class="status" id="status">⚙️ Введите API ключ DeepSeek для работы нейросети</div>
+
     <div class="controls">
         <button id="resetBtn">🔄 Новая игра</button>
-        <button id="learnBtn">📚 Обучить нейросеть</button>
+        <button id="statsBtn">📊 Статус</button>
     </div>
-    <div class="status" id="status">🧠 Нейросетевой движок активен</div>
 </div>
 
 <script>
-    // ============ НЕЙРОСЕТЬ (локальная, без API) ============
-    
-    // База знаний
-    let knowledge = new Map();
-    
-    // Загрузка сохранённых знаний
-    function loadKnowledge() {
-        const saved = localStorage.getItem('neuralKnowledge');
-        if (saved) {
-            const data = JSON.parse(saved);
-            for (let [key, value] of Object.entries(data)) {
-                knowledge.set(key, value);
-            }
-            return true;
-        }
-        return false;
-    }
-    
-    // Сохранение знаний
-    function saveKnowledge() {
-        const obj = {};
-        for (let [key, value] of knowledge.entries()) {
-            obj[key] = value;
-        }
-        localStorage.setItem('neuralKnowledge', JSON.stringify(obj));
-    }
-    
-    // Начальные знания
-    function initKnowledge() {
-        const defaults = [
-            ['вода', 'камень', true], ['бумага', 'камень', true], ['время', 'камень', true],
-            ['камень', 'ножницы', true], ['ножницы', 'бумага', true], ['мороз', 'вода', true],
-            ['огонь', 'вода', false], ['россия', 'камень', false], ['санкции', 'россия', true],
-            ['любовь', 'ненависть', true], ['лень', 'работа', true], ['кофе', 'сон', true],
-            ['смех', 'грусть', true], ['знания', 'невежество', true]
-        ];
-        for (const [what, whom, beats] of defaults) {
-            knowledge.set(`${what},${whom}`, beats);
-        }
-        saveKnowledge();
-    }
-    
-    // Получить факт
-    function getFact(what, whom) {
-        const key = `${what},${whom}`;
-        if (knowledge.has(key)) return knowledge.get(key);
-        
-        // Проверка синонимов
-        const synonyms = {
-            'вода': ['влага', 'жидкость', 'h2o'],
-            'камень': ['булыжник', 'валун', 'rock'],
-            'россия': ['рф', 'рашка']
-        };
-        
-        if (synonyms[what]) {
-            for (let syn of synonyms[what]) {
-                if (knowledge.has(`${syn},${whom}`)) return knowledge.get(`${syn},${whom}`);
-            }
-        }
-        
-        return null;
-    }
-    
-    // Добавить факт
-    function addFact(what, whom, beats) {
-        const key = `${what},${whom}`;
-        knowledge.set(key, beats);
-        saveKnowledge();
-    }
-    
-    // Нейросетевая логика (принимает решение)
-    function neuralDecide(answer, subject) {
-        // Ищем в базе
-        let known = getFact(answer, subject);
-        if (known !== null) return known;
-        
-        // Если не знаем — запускаем нейросетевой анализ
-        // Анализируем семантику слов
-        const strongVsWeak = {
-            'вода': { strong: ['огонь', 'пламя'], weak: ['камень', 'скала'] },
-            'камень': { strong: ['бумага', 'вода'], weak: ['ножницы', 'рука'] },
-            'огонь': { strong: ['вода', 'мороз'], weak: ['бумага', 'дерево'] },
-            'любовь': { strong: ['ненависть', 'злость'], weak: ['деньги', 'власть'] },
-            'знания': { strong: ['невежество', 'глупость'], weak: ['сила', 'деньги'] },
-            'время': { strong: ['камень', 'память'], weak: ['терпение', 'надежда'] }
-        };
-        
-        // Проверяем семантику
-        if (strongVsWeak[answer] && strongVsWeak[answer].strong.includes(subject)) {
-            return true;
-        }
-        if (strongVsWeak[answer] && strongVsWeak[answer].weak.includes(subject)) {
-            return false;
-        }
-        
-        // Умная эвристика: проверяем противоположности
-        const opposites = {
-            'добро': 'зло', 'зло': 'добро',
-            'свет': 'тьма', 'тьма': 'свет',
-            'жизнь': 'смерть', 'смерть': 'жизнь'
-        };
-        
-        if (opposites[answer] === subject) {
-            return true; // Добро бьёт зло и т.д.
-        }
-        
-        // Случайное решение с обучением
-        return Math.random() > 0.5;
-    }
-    
-    // Объяснение решения
-    function getReason(answer, subject, beats) {
-        if (beats === true) {
-            const reasons = [
-                `"${answer}" логично побеждает "${subject}"`,
-                `По моим данным, "${answer}" сильнее "${subject}"`,
-                `Анализ показывает: да, "${answer}" бьёт "${subject}"`,
-                `Семантическая сеть подтверждает: ${answer} > ${subject}`
-            ];
-            return reasons[Math.floor(Math.random() * reasons.length)];
-        } else {
-            const reasons = [
-                `"${answer}" уступает "${subject}" в силе`,
-                `После анализа я решила, что "${answer}" не победит "${subject}"`,
-                `В моей базе знаний нет подтверждения, что ${answer} бьёт ${subject}`,
-                `Я думаю, "${subject}" выигрывает у "${answer}"`
-            ];
-            return reasons[Math.floor(Math.random() * reasons.length)];
-        }
-    }
-    
-    // ============ ИГРА ============
+    // ============ НАСТРОЙКИ ============
     let currentSubject = "камень";
     let isLoading = false;
-    let learningMode = false;
-    let learningWhat = "";
-    let learningWhom = "";
+    let apiKey = localStorage.getItem('deepseek_api_key') || '';
     
-    const chat = document.getElementById('chat');
-    const input = document.getElementById('input');
+    // DOM элементы
+    const chatArea = document.getElementById('chatArea');
+    const userInput = document.getElementById('userInput');
     const sendBtn = document.getElementById('sendBtn');
-    const typing = document.getElementById('typing');
+    const typingIndicator = document.getElementById('typing');
     const statusDiv = document.getElementById('status');
+    const apiKeyInput = document.getElementById('apiKeyInput');
+    const saveKeyBtn = document.getElementById('saveKeyBtn');
     
-    function addMessage(type, text, reason = null) {
-        const div = document.createElement('div');
-        div.className = `message ${type}`;
-        let html = `<div class="bubble">${text}`;
-        if (reason) html += `<div class="reason">🧠 ${reason}</div>`;
-        html += `</div>`;
-        div.innerHTML = html;
-        chat.appendChild(div);
-        chat.scrollTop = chat.scrollHeight;
+    // Загружаем сохранённый ключ
+    if (apiKey) {
+        apiKeyInput.value = '•'.repeat(20);
+        statusDiv.innerHTML = '🧠 Нейросеть DeepSeek готова к работе!';
     }
     
-    function showTyping() { typing.style.display = 'block'; }
-    function hideTyping() { typing.style.display = 'none'; }
-    
-    async function sendMessage() {
-        if (isLoading) return;
-        const answer = input.value.trim().toLowerCase();
-        if (!answer) return;
-        
-        // Режим обучения
-        if (learningMode) {
-            if (answer === 'да') {
-                addFact(learningWhat, learningWhom, true);
-                addMessage('bot', `✅ Запомнила! "${learningWhat}" БЬЁТ "${learningWhom}"`);
-            } else if (answer === 'нет') {
-                addFact(learningWhat, learningWhom, false);
-                addMessage('bot', `✅ Запомнила! "${learningWhat}" НЕ БЬЁТ "${learningWhom}"`);
-            } else {
-                addMessage('bot', 'Напишите "да" или "нет"');
-                return;
-            }
-            learningMode = false;
-            learningWhat = "";
-            learningWhom = "";
-            addMessage('bot', `🔮 Что бьёт "${currentSubject}"?`);
-            isLoading = false;
-            input.value = '';
+    // Сохранение API ключа
+    saveKeyBtn.addEventListener('click', () => {
+        let newKey = apiKeyInput.value;
+        if (newKey.startsWith('•')) {
             return;
         }
+        if (newKey.startsWith('sk-')) {
+            apiKey = newKey;
+            localStorage.setItem('deepseek_api_key', apiKey);
+            apiKeyInput.value = '•'.repeat(20);
+            statusDiv.innerHTML = '✅ API ключ сохранён! Нейросеть активна.';
+            addMessage('bot', '✅ API ключ сохранён! Теперь я могу мыслить по-настоящему.');
+        } else {
+            statusDiv.innerHTML = '❌ Неверный формат ключа. Должен начинаться с sk-';
+        }
+    });
+    
+    function addMessage(type, content, reason = null) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${type === 'bot' ? 'bot-message' : 'user-message'}`;
+        const bubble = document.createElement('div');
+        bubble.className = 'bubble';
+        
+        if (type === 'bot' && reason) {
+            bubble.innerHTML = `<div>${content}</div><div class="reason">💭 ${reason}</div>`;
+        } else {
+            bubble.textContent = content;
+        }
+        
+        messageDiv.appendChild(bubble);
+        chatArea.appendChild(messageDiv);
+        chatArea.scrollTop = chatArea.scrollHeight;
+    }
+    
+    function showTyping() { typingIndicator.style.display = 'block'; }
+    function hideTyping() { typingIndicator.style.display = 'none'; }
+    
+    // ============ ЗАПРОС К НАСТОЯЩЕЙ НЕЙРОСЕТИ DEEPSEEK ============
+    async function callDeepSeek(answer, currentSubject) {
+        if (!apiKey || !apiKey.startsWith('sk-')) {
+            throw new Error('API ключ не установлен');
+        }
+        
+        const prompt = `Ты — судья в игре "Что бьёт что?".
+Игрок отвечает на вопрос "Что бьёт ${currentSubject}?" словом "${answer}".
+
+Реши, бьёт ли "${answer}" "${currentSubject}"?
+Ответь ТОЛЬКО в формате JSON без лишнего текста:
+{"beats": true/false, "reason": "короткое объяснение на русском (до 50 символов)"}
+
+Примеры:
+- вода → камень → {"beats": true, "reason": "вода точит камень"}
+- бумага → камень → {"beats": true, "reason": "бумага оборачивает камень"}
+- огонь → вода → {"beats": false, "reason": "вода тушит огонь"}
+- санкции → россия → {"beats": true, "reason": "санкции бьют по экономике"}
+- любовь → ненависть → {"beats": true, "reason": "любовь побеждает ненависть"}
+- время → камень → {"beats": true, "reason": "время разрушает камень"}
+
+Важно: отвечай ТОЛЬКО JSON, без пояснений, без markdown.`;
+        
+        const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${apiKey}`
+            },
+            body: JSON.stringify({
+                model: 'deepseek-chat',
+                messages: [
+                    { role: 'system', content: 'Ты эксперт по логическим связям. Отвечаешь только JSON. Никогда не добавляешь лишний текст.' },
+                    { role: 'user', content: prompt }
+                ],
+                temperature: 0.3,
+                max_tokens: 150
+            })
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.text();
+            throw new Error(`HTTP ${response.status}: ${errorData.substring(0, 100)}`);
+        }
+        
+        const data = await response.json();
+        
+        if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+            throw new Error('Неожиданный ответ от API');
+        }
+        
+        const rawText = data.choices[0].message.content;
+        console.log('DeepSeek ответ:', rawText);
+        
+        // Парсим JSON
+        const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) {
+            throw new Error('Не удалось распарсить JSON');
+        }
+        
+        const parsed = JSON.parse(jsonMatch[0]);
+        return {
+            beats: parsed.beats === true || parsed.beats === 'true',
+            reason: parsed.reason || 'Решение принято'
+        };
+    }
+    
+    // ============ ОТПРАВКА СООБЩЕНИЯ ============
+    async function sendMessage() {
+        if (isLoading) return;
+        const answer = userInput.value.trim().toLowerCase();
+        if (!answer) return;
         
         addMessage('user', answer);
-        input.value = '';
+        userInput.value = '';
         isLoading = true;
         sendBtn.disabled = true;
         showTyping();
-        statusDiv.textContent = '🧠 Нейросеть анализирует...';
+        statusDiv.innerHTML = '🧠 Нейросеть DeepSeek думает...';
         
-        // Имитация задержки (как настоящая нейросеть)
-        setTimeout(() => {
-            const beats = neuralDecide(answer, currentSubject);
-            const reason = getReason(answer, currentSubject, beats);
-            hideTyping();
-            
-            if (beats) {
-                addMessage('bot', `✅ ДА! ${answer} БЬЁТ ${currentSubject}`, reason);
-                currentSubject = answer;
-                setTimeout(() => addMessage('bot', `🔮 Что бьёт "${currentSubject}"?`), 800);
-            } else {
-                addMessage('bot', `❌ НЕТ, ${answer} НЕ БЬЁТ ${currentSubject}`, reason);
-                setTimeout(() => addMessage('bot', `🔮 Что бьёт "${currentSubject}"?`), 800);
+        try {
+            if (!apiKey || !apiKey.startsWith('sk-')) {
+                throw new Error('Введите API ключ DeepSeek в поле выше');
             }
             
-            statusDiv.textContent = `🧠 Нейросеть знает ${knowledge.size} фактов`;
+            const result = await callDeepSeek(answer, currentSubject);
+            hideTyping();
+            
+            if (result.beats) {
+                addMessage('bot', `✅ ДА! ${answer} БЬЁТ ${currentSubject}`, result.reason);
+                currentSubject = answer;
+                setTimeout(() => {
+                    addMessage('bot', `🔮 Что бьёт "${currentSubject}"?`);
+                }, 500);
+            } else {
+                addMessage('bot', `❌ НЕТ, ${answer} НЕ БЬЁТ ${currentSubject}`, result.reason);
+                setTimeout(() => {
+                    addMessage('bot', `🔮 Что бьёт "${currentSubject}"?`);
+                }, 500);
+            }
+            statusDiv.innerHTML = '🧠 Нейросеть DeepSeek активна | 5M токенов бесплатно';
+            
+        } catch (error) {
+            hideTyping();
+            console.error('Ошибка:', error);
+            addMessage('bot', `🌐 Ошибка нейросети: ${error.message}`);
+            statusDiv.innerHTML = `⚠️ ${error.message}`;
+        } finally {
             isLoading = false;
             sendBtn.disabled = false;
-            input.focus();
-        }, 600);
+            userInput.focus();
+        }
     }
     
     function resetGame() {
         if (isLoading) return;
         currentSubject = "камень";
-        while (chat.children.length > 1) {
-            chat.removeChild(chat.lastChild);
+        while (chatArea.children.length > 1) {
+            chatArea.removeChild(chatArea.lastChild);
         }
         addMessage('bot', '🔄 Игра перезапущена!');
         setTimeout(() => addMessage('bot', `🔮 Что бьёт "${currentSubject}"?`), 500);
-        statusDiv.textContent = `🧠 Нейросеть знает ${knowledge.size} фактов`;
     }
     
-    function learnMode() {
-        if (isLoading) return;
-        addMessage('bot', '📚 Режим обучения. Напиши правило в формате: "X бьёт Y" (например: "спок бьёт камень")');
-        
-        // Ожидаем ввод правила
-        const originalHandler = window.learnHandler;
-        window.learnHandler = (rule) => {
-            const parts = rule.toLowerCase().split(' бьёт ');
-            if (parts.length === 2) {
-                learningWhat = parts[0].trim();
-                learningWhom = parts[1].trim();
-                if (!learningWhat || !learningWhom) {
-                    addMessage('bot', '❌ Неправильный формат. Напиши "X бьёт Y"');
-                    return false;
-                }
-                addMessage('bot', `Правильно ли, что "${learningWhat}" бьёт "${learningWhom}"? (да/нет)`);
-                learningMode = true;
-                return true;
-            } else {
-                addMessage('bot', '❌ Напиши в формате "существительное бьёт существительное"');
-                return false;
-            }
-        };
-        
-        // Перехватываем следующий ввод
-        const tempSend = () => {
-            const rule = input.value.trim();
-            if (rule && window.learnHandler) {
-                input.value = '';
-                if (window.learnHandler(rule)) {
-                    sendBtn.removeEventListener('click', tempSend);
-                    input.removeEventListener('keypress', tempKeyPress);
-                    window.learnHandler = null;
-                }
-            }
-        };
-        const tempKeyPress = (e) => { if (e.key === 'Enter') tempSend(); };
-        sendBtn.addEventListener('click', tempSend);
-        input.addEventListener('keypress', tempKeyPress);
+    function showStats() {
+        addMessage('bot', `📊 Статистика нейросети:\n• Модель: DeepSeek V3\n• API ключ: ${apiKey ? '✅ установлен' : '❌ не установлен'}\n• Тариф: 5M токенов бесплатно\n• Текущий объект: "${currentSubject}"`);
     }
     
-    // Инициализация
-    if (!loadKnowledge()) {
-        initKnowledge();
-    }
-    
+    // Event listeners
     sendBtn.addEventListener('click', sendMessage);
-    input.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
+    userInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
     document.getElementById('resetBtn').addEventListener('click', resetGame);
-    document.getElementById('learnBtn').addEventListener('click', learnMode);
+    document.getElementById('statsBtn').addEventListener('click', showStats);
     
-    statusDiv.textContent = `🧠 Нейросеть знает ${knowledge.size} фактов`;
-    input.focus();
+    userInput.focus();
 </script>
 </body>
 </html>
